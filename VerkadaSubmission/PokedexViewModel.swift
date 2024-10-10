@@ -7,11 +7,24 @@
 
 import Foundation
 
-struct Pokemon {
+struct Sprites: Codable, Hashable {
+    let frontDefault: String?
 
+    enum CodingKeys: String, CodingKey {
+        case frontDefault = "front_default"
+    }
 }
 
-struct PokedexAPIResult: Decodable {
+struct Pokemon: Codable, Hashable {
+    let sprites: Sprites
+
+    init(sprites: Sprites) {
+        self.sprites = sprites
+    }
+}
+
+
+struct PokedexAPIResult: Decodable, Hashable {
 
     var name: String?
 
@@ -24,7 +37,7 @@ struct PokedexAPIResult: Decodable {
 }
 
 
-struct PokedexAPIResponse: Decodable {
+struct PokedexAPIResponse: Decodable, Hashable {
 
     var count: Int?
 
@@ -44,10 +57,10 @@ struct PokedexAPIResponse: Decodable {
 
 @Observable class PokedexViewModel {
 
-    var pokemon: [Pokemon]
+    var pokemons: [Pokemon]
 
-    init(pokemon: [Pokemon] = []) {
-        self.pokemon = pokemon
+    init(pokemons: [Pokemon] = []) {
+        self.pokemons = pokemons
     }
 
     func fetchPokemon() async throws {
@@ -58,12 +71,19 @@ struct PokedexAPIResponse: Decodable {
         let (data, _) = try await URLSession.shared.data(from: serverURL)
 
         // parse the JSON data to swift struct
-        var results = try JSONDecoder().decode(PokedexAPIResponse.self, from: data)
+        let response = try JSONDecoder().decode(PokedexAPIResponse.self, from: data)
 
-        print(results)
+        for result in response.results ?? [] {
+            if let url = result.url {
 
-//        self.results = items
+                let (data, _) = try await URLSession.shared.data(from: URL(string: url)!)
 
+                let pokemon = try JSONDecoder().decode(Pokemon.self, from: data)
+
+                self.pokemons.append(pokemon)
+
+            }
+        }
     }
 
 }
