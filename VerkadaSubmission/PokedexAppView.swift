@@ -18,7 +18,7 @@ struct PokedexAppView: View {
             ScrollView {
                 LazyVGrid(columns: columns) {
                     ForEach(pokedexViewModel.pokemons, id: \.self) { pokemon in
-                        AsyncImage(url: URL(string: pokemon.sprites.frontDefault ?? ""))
+                        AsyncImage(url: URL(string: pokemon.sprites?.frontDefault ?? ""))
                     }
                 }
             }
