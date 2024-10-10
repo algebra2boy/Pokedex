@@ -40,13 +40,17 @@ struct PokedexAppView: View {
                 }
             }
             .navigationTitle("Pokedex")
-            .task {
-                do {
-                    try await pokedexViewModel.fetchPokemon()
-                } catch {
-                    print(error)
-                }
-            }
+            .task(loadPokemons)
+        }
+    }
+
+    @Sendable
+    private func loadPokemons() async {
+        do {
+            try await pokedexViewModel.fetchPokemon()
+            print("current", pokedexViewModel.pokemons)
+        } catch {
+            print(error)
         }
     }
 }
