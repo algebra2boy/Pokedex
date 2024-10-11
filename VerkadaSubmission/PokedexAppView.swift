@@ -25,13 +25,16 @@ struct PokedexAppView: View {
                 VStack {
                     
                     if let selectedPokemon {
-                        ImageView(url: selectedPokemon.sprites?.frontDefault)
+                        ImageView(url: selectedPokemon.sprites?.frontDefault, size: 200)
                     }
                 }
                 
                 LazyVGrid(columns: columns, spacing: 50) {
+                    
                     ForEach(pokedexViewModel.pokemons) { pokemon in
+                        
                         LazyVStack { // enable lazy loading to display pokemon only when it is needed
+                            
                             ImageView(url: pokemon.sprites?.frontDefault)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 5)
@@ -40,8 +43,18 @@ struct PokedexAppView: View {
                                 .onTapGesture { selectedPokemon = pokemon }
                                 .onAppear { performPagination(currentPokemon: pokemon) }
                         }
+                        
                     }
+                    
                 }
+                
+                if pokedexViewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .padding(.vertical)
+                }
+                
+                
             }
             .navigationTitle("Pokedex")
             .task(loadPokemons)
@@ -58,10 +71,16 @@ struct PokedexAppView: View {
     }
     
     private func performPagination(currentPokemon: Pokemon) {
-        if currentPokemon == pokedexViewModel.pokemons.last && isPaginating {
+        guard !pokedexViewModel.isLoading else { return } // Prevent multiple loads
+        
+        // when it is around the last 5 items, we perform pagination to optimize fetching more smoothly
+        let thresholdIndex = pokedexViewModel.pokemons.index(pokedexViewModel.pokemons.endIndex, offsetBy: -5)
+        
+        if
+            pokedexViewModel.pokemons.firstIndex(where: { $0.id == currentPokemon.id }) == thresholdIndex && isPaginating {
             isPaginating = false
             Task {
-                try await Task.sleep(nanoseconds: 200_000_000)
+                try await Task.sleep(nanoseconds: 100_000_000)
                 await loadPokemons()
                 isPaginating = true
             }
@@ -73,13 +92,16 @@ struct ImageView: View {
     
     let url: String?
     
-    let size: CGFloat = 100
+    var size: CGFloat = 100
+    
+    @State private var retryCount = 0
     
     var body: some View {
         AsyncImage(url: URL(string: url ?? "")) { phase in
             switch phase {
             case .empty:
                 ProgressView()
+                    .progressViewStyle(.circular)
                     .frame(width: size, height: size)
             case .success(let image):
                 image
