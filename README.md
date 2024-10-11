@@ -1,5 +1,5 @@
 # Pokedex
-A simple mobile app that sends network requets to Pokemon API to render pokemon image using pagination.
+A simple mobile app that sends network requests to Pokemon API to render pokemon image using pagination technique.
 
 # Platform
 Please make sure you are running this project on XCode 16.0, iOS 18.0 and Swift 6.0.
