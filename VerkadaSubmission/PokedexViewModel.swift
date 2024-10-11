@@ -11,13 +11,23 @@ import Foundation
 
     var pokemons: [Pokemon]
 
+    var offset: Int = 0
+
+    var isLoading: Bool = false
+
+    let limit: Int = 20
+
     init(pokemons: [Pokemon] = []) {
         self.pokemons = pokemons
     }
 
     func fetchPokemon() async throws {
 
-        guard let serverURL = URL(string: "https://pokeapi.co/api/v2/pokemon?limit=20&offset=0") else { return }
+        guard !isLoading else { return }
+
+        isLoading = true
+
+        guard let serverURL = URL(string: "https://pokeapi.co/api/v2/pokemon?limit=\(limit)&offset=\(offset)") else { return }
 
         // fetch data asynchronously from the server url
         let (data, _) = try await URLSession.shared.data(from: serverURL)
@@ -29,9 +39,7 @@ import Foundation
         for result in response.results ?? [] {
 
             // validate the url
-            guard let urlString = result.url, let url = URL(string: urlString) else {
-                continue
-            }
+            guard let urlString = result.url, let url = URL(string: urlString) else { continue }
 
             let (data, _) = try await URLSession.shared.data(from: url)
 
@@ -40,6 +48,9 @@ import Foundation
             self.pokemons.append(pokemon)
 
         }
+
+        self.offset += limit
+        isLoading = false
     }
 
 }

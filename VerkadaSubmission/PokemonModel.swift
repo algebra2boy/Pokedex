@@ -46,10 +46,12 @@ struct Sprites: Decodable, Hashable {
     }
 }
 
-struct Pokemon: Decodable, Hashable {
+struct Pokemon: Identifiable, Decodable, Hashable {
+    let id: Int?
     let sprites: Sprites?
 
-    init(sprites: Sprites? = nil) {
+    init(id: Int? = nil, sprites: Sprites? = nil) {
+        self.id = id
         self.sprites = sprites
     }
 }
